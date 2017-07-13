@@ -77,10 +77,11 @@ segment code
 
 
 			call tela_inicial
-
 			call tela_elevador
 
-			call delay
+			;mov ax,3
+		;	mov bx,vermelho
+		;	call muda_cor_seta
 			call delay
 			call delay
 
@@ -140,17 +141,15 @@ segment code
 		drawLine	450,420,440,370,branco_intenso
 		drawLine	430,420,440,370,branco_intenso
 		;Para cima e para baixo
-		drawLine	440,347,440,267,branco_intenso
+		drawLine	440,347,440,267,branco_intenso;var_seta dupla
 		drawLine	450,297,440,267,branco_intenso
 		drawLine	430,297,440,267,branco_intenso
-		drawLine	440,347,440,267,branco_intenso
 		drawLine	440,347,450,307,branco_intenso
 		drawLine	440,347,430,307,branco_intenso
 		;Para cima e para baixo
-		drawLine	440,244,440,164,branco_intenso
+		drawLine	440,244,440,164,branco_intenso;var_seta dupla
 		drawLine	450,194,440,164,branco_intenso
 		drawLine	430,194,440,164,branco_intenso
-		drawLine	440,244,440,164,branco_intenso
 		drawLine	440,244,450,204,branco_intenso
 		drawLine	440,244,430,204,branco_intenso
 		;Para cima
@@ -163,17 +162,17 @@ segment code
 		drawLine	580,420,570,370,branco_intenso
 		drawLine	560,420,570,370,branco_intenso
 		;Para cima e para baixo
-		drawLine	550,347,550,267,branco_intenso
+		drawLine	550,347,550,267,branco_intenso;baixo
 		drawLine	560,317,550,267,branco_intenso
 		drawLine	540,317,550,267,branco_intenso
-		drawLine	590,347,590,267,branco_intenso
+		drawLine	590,347,590,267,branco_intenso;cima
 		drawLine	590,347,600,297,branco_intenso
 		drawLine	590,347,580,297,branco_intenso
 		;Para cima e para baixo
-		drawLine	550,244,550,164,branco_intenso
+		drawLine	550,244,550,164,branco_intenso;baixo
 		drawLine	560,214,550,164,branco_intenso
 		drawLine	540,214,550,164,branco_intenso
-		drawLine	590,244,590,164,branco_intenso
+		drawLine	590,244,590,164,branco_intenso;cima
 		drawLine	590,244,600,194,branco_intenso
 		drawLine	590,244,580,194,branco_intenso
 		;Para cima
@@ -182,13 +181,96 @@ segment code
 		drawLine	570,140,560,90,branco_intenso
 		ret
 
-		muda_cor_seta:
-
-
-
-
-
-
+		muda_cor_seta:		;;recebe em ax o numero da var_seta que terá a cor alterada e em bx a cor
+		push ax
+		push bx
+		mov word[var_seta],ax
+		mov byte[cor],bl
+		cmp ax,1
+		jne seta2
+		drawLine	440,450,440,370,bl
+		drawLine	450,420,440,370,bl
+		drawLine	430,420,440,370,bl
+		seta2:
+		mov ax,word[var_seta]
+		mov bl,byte[cor]
+		cmp ax,2
+		jne seta3
+		drawLine	440,347,440,267,bl
+		drawLine	450,297,440,267,bl
+		drawLine	430,297,440,267,bl
+		drawLine	440,347,450,307,bl
+		drawLine	440,347,430,307,bl
+		seta3:
+		mov ax,word[var_seta]
+		mov bl,byte[cor]
+		cmp ax,3
+		jne seta4
+		drawLine	440,244,440,164,bl
+		drawLine	450,194,440,164,bl
+		drawLine	430,194,440,164,bl
+		drawLine	440,244,450,204,bl
+		drawLine	440,244,430,204,bl
+		seta4:
+		mov ax,word[var_seta]
+		mov bl,byte[cor]
+		cmp ax,4
+		jne seta5
+		drawLine	440,140,440,60,bl
+		drawLine	440,140,450,90,bl
+		drawLine	440,140,430,90,bl
+		seta5:
+		mov ax,word[var_seta]
+		mov bl,byte[cor]
+		cmp ax,5
+		jne seta6
+		drawLine	570,450,570,370,bl
+		drawLine	580,420,570,370,bl
+		drawLine	560,420,570,370,bl
+		seta6:
+		mov ax,word[var_seta]
+		mov bl,byte[cor]
+		cmp ax,6
+		jne seta7
+		drawLine	550,347,550,267,bl
+		drawLine	560,317,550,267,bl
+		drawLine	540,317,550,267,bl
+		seta7:
+		mov ax,word[var_seta]
+		mov bl,byte[cor]
+		cmp ax,7
+		jne seta8
+		drawLine	590,347,590,267,bl
+		drawLine	590,347,600,297,bl
+		drawLine	590,347,580,297,bl
+		seta8:
+		mov ax,word[var_seta]
+		mov bl,byte[cor]
+		cmp ax,9
+		jne seta9
+		drawLine	550,244,550,164,bl
+		drawLine	560,214,550,164,bl
+		drawLine	540,214,550,164,bl
+		seta9:
+		mov ax,word[var_seta]
+		mov bl,byte[cor]
+		cmp ax,9
+		jne seta10
+		drawLine	590,244,590,164,bl
+		drawLine	590,244,600,194,bl
+		drawLine	590,244,580,194,bl
+		seta10:
+		mov ax,word[var_seta]
+		mov bl,byte[cor]
+		cmp ax,10
+		jne fim_mudacorseta
+		drawLine	570,140,570,60,bl
+		drawLine	570,140,580,90,bl
+		drawLine	570,140,560,90,bl
+		fim_mudacorseta:
+		pop bx
+		pop ax
+		ret
 
 
 
@@ -640,6 +722,7 @@ mens_modo				db	'Modo de operacao: $'
 mens_chamadas		db	'Chamadas$'
 mens_internas		db	'INTERNAS$'
 mens_externas		db	'EXTERNAS$'
+var_seta	dw	0
 ;*************************************************************************
 segment stack stack
 resb 		512

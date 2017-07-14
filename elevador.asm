@@ -1,7 +1,7 @@
 
 
 ;----------------------------------	 		 SISTEMAS EMBARCADOS I 2017/1             -------------------------------------
-;---------------------------------- 	   ELEVADOR - MODELO ACRILICO NOVO            -------------------------------------
+;---------------------------------- 	   ELEVADOR - MODELO ACRILICO VELHO            -------------------------------------
 ;
 ;
 ;										      DOUGLAS FUNAYAMA TAVARES
@@ -55,6 +55,16 @@
 %%exit:
 %endmacro
 
+%macro drawChar 4 ;char,line,column,color
+	mov	byte[cor], %4
+	mov		bx,0
+	mov		dh,%2		;line 0-29
+	mov		dl,%3		;column 0-79
+	call	cursor
+	mov		al,[bx+%1]
+	call	caracter
+%endmacro
+
 ;------------------------------------------INICIO DO CÓDIGO-------------------------------------------------------
 
 segment code
@@ -65,8 +75,20 @@ segment code
     		mov 	ss,ax
     		mov 	sp,stacktop
 
+;Interrupcao
+				xor     AX, AX
+				mov     ES, AX
+				mov     AX, [ES:int9*4];carregou AX com offset anterior
+				mov     [offset_dos], AX        ; offset_dos guarda o end. para qual ip de int 9 estava apontando anteriormente
+				mov     AX, [ES:int9*4+2]     ; cs_dos guarda o end. anterior de CS
+				mov     [cs_dos], AX
+				cli
+				mov     [ES:int9*4+2], CS
+				mov     WORD [ES:int9*4],keyint
+				sti
+
 ; Salvar modo de video
-            mov  	ah,0Fh
+        mov  	ah,0Fh
     		int  	10h
     		mov  	[modo_anterior],al
 
@@ -77,18 +99,28 @@ segment code
 
 
 			call tela_inicial
+			call delay
 			call tela_elevador
 
-			;mov ax,3
-		;	mov bx,vermelho
-		;	call muda_cor_seta
-			call delay
-			call delay
 
+			call delay
+			call delay
+			call delay
+			call delay
+			call delay
+			fimprograma:
 			mov  	ah,0   						; set video mode
 			mov  	al,byte[modo_anterior]   	; modo anterior
 			int  	10h       					;salva modo de video
 			mov     ah,4Ch
+			cli
+			xor     ax, ax
+			mov     es, ax
+			mov     ax, [cs_dos]
+			mov     [es:int9*4+2], ax
+			mov     ax, [offset_dos]
+			mov     [es:int9*4], ax
+			mov     AH, 4Ch
 			int     21h
 
 
@@ -179,6 +211,44 @@ segment code
     drawLine	570,140,570,60,branco_intenso
 		drawLine	570,140,580,90,branco_intenso
 		drawLine	570,140,560,90,branco_intenso
+		;
+
+		drawChar	quatro,3,15,branco_intenso
+		call estado_parado
+		call modo_funcionando
+		ret
+
+		muda_andar:
+		push ax
+		add	ax,30h
+		mov [andar],ax
+		drawChar	andar,3,15,branco_intenso
+		pop ax
+		ret
+
+		estado_parado:
+		drawWord	buffer,4,22,preto
+		drawWord	estado1,4,22,branco_intenso
+		ret
+
+		estado_subindo:
+		drawWord	buffer,4,22,preto
+		drawWord	estado2,4,22,verde
+		ret
+
+		estado_descendo:
+		drawWord	buffer,4,22,preto
+		drawWord	estado3,4,22,amarelo
+		ret
+
+		modo_funcionando:
+		drawWord	buffer,5,20,preto
+		drawWord	modo1,5,20,branco_intenso
+		ret
+
+		modo_emergencia:
+		drawWord	buffer,5,20,preto
+		drawWord	modo2,5,20,vermelho
 		ret
 
 		muda_cor_seta:		;;recebe em ax o numero da var_seta que terá a cor alterada e em bx a cor
@@ -272,6 +342,91 @@ segment code
 		pop ax
 		ret
 
+		emergencia:
+		mov		byte[bot_g],0
+    mov 	byte[bot_emergencia],1
+		call 	modo_emergencia		;chama a fun��o
+		call estado_parado
+		mov ax,0
+		mov	[parado],ax
+		;loopemergencia:
+		;mov	ax,[bot_g]
+		;cmp ax,1
+		;jne loopemergencia
+		;call modo_funcionando
+		;mov 	byte[bot_emergencia],0
+  ;  cmp 	byte[status],0             	;Verifica se ao acionar a Emerg�ncia o elevador estava parado
+		;je 		emergencia_parado			;se estiver parado, segue para a funcao
+	;	mov 	ax,word[contador]  			;Armazena a volta quando entrou na emergencia
+		ret
+
+;-----------------------------------KEYINT----------------------------------------------------
+keyint:
+		push    ax
+		push    bx
+		push    ds
+		mov     ax,data
+		mov     ds,ax
+
+		in      al,kb_data
+		mov    	byte[tecla_u],al
+
+		in      al,kb_ctl
+		or      al,80h
+		out     kb_ctl,al
+
+		and     al,7Fh
+		out     kb_ctl,al
+
+		mov     al,eoi
+		out     pictrl,al
+
+		cmp		byte[tecla_u],02h
+		jne		pressionou2
+		mov 	byte[chamada_interna1],1
+		mov ax,1
+		mov bx,vermelho
+		call muda_cor_seta
+		pressionou2:
+		cmp		byte[tecla_u],03h
+		jne		pressionou3
+		mov 	byte[chamada_interna2],1
+		mov ax,2
+		mov bx,vermelho
+		call muda_cor_seta
+		pressionou3:
+		cmp		byte[tecla_u],04h
+		jne		pressionou4
+		mov 	byte[chamada_interna3],1
+		mov ax,3
+		mov bx,vermelho
+		call muda_cor_seta
+		pressionou4:
+		cmp		byte[tecla_u],05h
+		jne		pressionoug
+		mov 	byte[chamada_interna4],1
+		mov ax,4
+		mov bx,vermelho
+		call muda_cor_seta
+		pressionoug:
+		cmp		byte[tecla_u],22h
+		jne 	pressionouq
+		mov		byte[bot_g],1
+		pressionouq:
+		cmp		byte[tecla_u],10h
+		jne 	pressionouesc
+		call fimprograma
+		pressionouesc:
+		cmp		byte[tecla_u],01h
+		jne	 fimkeyint
+		call emergencia
+
+
+		fimkeyint:
+		pop     ds
+		pop     bx
+		pop     ax
+		iret
 
 
 ;-----------------------------------FUNCOES GRAFICAS----------------------------------------------------
@@ -685,44 +840,79 @@ fim_circle:
 ;*******************************************************************
 segment data
 
-cor		db		branco_intenso
-
-preto			equ		0
-azul			equ		1
-verde			equ		2
-cyan			equ		3
-vermelho		equ		4
-magenta			equ		5
-marrom			equ		6
-branco			equ		7
-cinza			equ		8
-azul_claro		equ		9
-verde_claro		equ		10
-cyan_claro		equ		11
-rosa			equ		12
-magenta_claro	equ		13
-amarelo			equ		14
+;------------------------------------------- linec ------------------------------------------------------
+cor							db		branco_intenso
+preto						equ		0
+azul						equ		1
+verde						equ		2
+cyan						equ		3
+vermelho				equ		4
+magenta					equ		5
+marrom					equ		6
+branco					equ		7
+cinza						equ		8
+azul_claro			equ		9
+verde_claro			equ		10
+cyan_claro			equ		11
+rosa						equ		12
+magenta_claro		equ		13
+amarelo					equ		14
 branco_intenso	equ		15
-modo_anterior	db		0
-linha			dw		0
-coluna			dw		0
-deltax			dw		0
-deltay			dw		0
+modo_anterior		db		0
+linha						dw		0
+coluna					dw		0
+deltax					dw		0
+deltay					dw		0
 
-mens_calibrando	db	'Calibrando...$'
-mens_espaco			db	'Aperte ESPACO no quarto andar.$'
-mens_sair				db	'Pressione Q para sair do programa$'
-mens_titulo			db	'Projeto Final de Sistemas Embarcados 2017-1$'
-mens_nome1			db	'Douglas Funayama Tavares$'
-mens_nome2			db	'Gabriel Giorisatto de Angelo$'
-mens_nome3			db	'Luiz Otavio Gerhardt Fernandes$'
-mens_andar			db	'Andar atual: $'
-mens_estado			db	'Estado do elevador: $'
-mens_modo				db	'Modo de operacao: $'
-mens_chamadas		db	'Chamadas$'
-mens_internas		db	'INTERNAS$'
-mens_externas		db	'EXTERNAS$'
-var_seta	dw	0
+;------------------------------------------- tecbuf ------------------------------------------------------
+
+kb_data 			equ 	60h		; PORTA DE LEITURA DE TECLADO
+kb_ctl  			equ 	61h		; PORTA DE RESET PARA PEDIR NOVA INTERRUPCAO
+pictrl  			equ 	20h
+eoi     			equ 	20h
+int9    			equ 	9h
+cs_dos  			dw  	1
+offset_dos  	dw 		1
+tecla_u 			db 		0
+tecla   			resb	8
+p_i     			dw  	0			; ponteiro p/ interrupcao (qnd pressiona tecla)
+p_t     			dw  	0			; ponterio p/ interrupcao (qnd solta tecla)
+teclasc 			db  	0,0,13,10,'$'
+;----------------------------------------------------------------------------------------------------------------------
+
+mens_calibrando	db		'Calibrando...$'
+mens_espaco			db		'Aperte ESPACO no quarto andar.$'
+mens_sair				db		'Pressione Q para sair do programa$'
+mens_titulo			db		'Projeto Final de Sistemas Embarcados 2017-1$'
+mens_nome1			db		'Douglas Funayama Tavares$'
+mens_nome2			db		'Gabriel Giorisatto de Angelo$'
+mens_nome3			db		'Luiz Otavio Gerhardt Fernandes$'
+mens_andar			db		'Andar atual: $'
+mens_estado			db		'Estado do elevador: $'
+mens_modo				db		'Modo de operacao: $'
+mens_chamadas		db		'Chamadas$'
+mens_internas		db		'INTERNAS$'
+mens_externas		db		'EXTERNAS$'
+var_seta				dw		0
+buffer					db		'                   $'
+estado1					db		'Parado$'
+estado2					db		'Subindo$'
+estado3					db		'Descendo$'
+modo1						db		'Funcionando$'
+modo2						db		'EMERGENCIA!!!$'
+andar						db		'0'
+um							db		'1'
+dois						db		'2'
+tres						db		'3'
+quatro					db		'4'
+chamada_interna1	db		'0'
+chamada_interna2	db		'0'
+chamada_interna3	db		'0'
+chamada_interna4	db		'0'
+parado						db		'0'
+bot_emergencia				db		'0'
+bot_g							db				'0'
+
 ;*************************************************************************
 segment stack stack
 resb 		512

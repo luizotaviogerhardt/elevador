@@ -99,15 +99,13 @@ segment code
 
 
 			call tela_inicial
-			call delay
+			call calibra
 			call tela_elevador
 
 
-			call delay
-			call delay
-			call delay
-			call delay
-			call delay
+			infinito:
+			jmp infinito
+
 			fimprograma:
 			mov  	ah,0   						; set video mode
 			mov  	al,byte[modo_anterior]   	; modo anterior
@@ -256,7 +254,7 @@ segment code
 		push bx
 		mov word[var_seta],ax
 		mov byte[cor],bl
-		cmp ax,1
+		cmp ax,4
 		jne seta2
 		drawLine	440,450,440,370,bl
 		drawLine	450,420,440,370,bl
@@ -264,7 +262,7 @@ segment code
 		seta2:
 		mov ax,word[var_seta]
 		mov bl,byte[cor]
-		cmp ax,2
+		cmp ax,3
 		jne seta3
 		drawLine	440,347,440,267,bl
 		drawLine	450,297,440,267,bl
@@ -274,7 +272,7 @@ segment code
 		seta3:
 		mov ax,word[var_seta]
 		mov bl,byte[cor]
-		cmp ax,3
+		cmp ax,2
 		jne seta4
 		drawLine	440,244,440,164,bl
 		drawLine	450,194,440,164,bl
@@ -284,7 +282,7 @@ segment code
 		seta4:
 		mov ax,word[var_seta]
 		mov bl,byte[cor]
-		cmp ax,4
+		cmp ax,1
 		jne seta5
 		drawLine	440,140,440,60,bl
 		drawLine	440,140,450,90,bl
@@ -292,7 +290,7 @@ segment code
 		seta5:
 		mov ax,word[var_seta]
 		mov bl,byte[cor]
-		cmp ax,5
+		cmp ax,10
 		jne seta6
 		drawLine	570,450,570,370,bl
 		drawLine	580,420,570,370,bl
@@ -300,7 +298,7 @@ segment code
 		seta6:
 		mov ax,word[var_seta]
 		mov bl,byte[cor]
-		cmp ax,6
+		cmp ax,9
 		jne seta7
 		drawLine	550,347,550,267,bl
 		drawLine	560,317,550,267,bl
@@ -308,7 +306,7 @@ segment code
 		seta7:
 		mov ax,word[var_seta]
 		mov bl,byte[cor]
-		cmp ax,7
+		cmp ax,8
 		jne seta8
 		drawLine	590,347,590,267,bl
 		drawLine	590,347,600,297,bl
@@ -316,7 +314,7 @@ segment code
 		seta8:
 		mov ax,word[var_seta]
 		mov bl,byte[cor]
-		cmp ax,9
+		cmp ax,7
 		jne seta9
 		drawLine	550,244,550,164,bl
 		drawLine	560,214,550,164,bl
@@ -324,7 +322,7 @@ segment code
 		seta9:
 		mov ax,word[var_seta]
 		mov bl,byte[cor]
-		cmp ax,9
+		cmp ax,6
 		jne seta10
 		drawLine	590,244,590,164,bl
 		drawLine	590,244,600,194,bl
@@ -332,7 +330,7 @@ segment code
 		seta10:
 		mov ax,word[var_seta]
 		mov bl,byte[cor]
-		cmp ax,10
+		cmp ax,5
 		jne fim_mudacorseta
 		drawLine	570,140,570,60,bl
 		drawLine	570,140,580,90,bl
@@ -359,6 +357,86 @@ segment code
 		;je 		emergencia_parado			;se estiver parado, segue para a funcao
 	;	mov 	ax,word[contador]  			;Armazena a volta quando entrou na emergencia
 		ret
+
+		calibra:
+				push ax
+				push dx
+				mov		dx,318h
+				xor		al,al
+				out		dx,al
+				mov		dx,319h
+				inc		al
+				out		dx,al
+				mov		dx,318h
+				mov		al,01000000b
+				out		dx,al
+				apertaespaco:
+				cmp		byte[tecla_u],39h				;Verifica se apertou espaco
+				jne		apertaespaco
+				mov   	word[contador_giros],267          ;3x89 = 267, que indica o quarto andar
+				mov		dx,318h
+				call conta_giros
+				mov   	byte[parado],0              ;Elevador no quarto andar
+				mov     dx,318H
+				mov		al,00000000b							;Para o motor
+				out		dx,al
+				pop dx
+				pop ax
+				ret
+
+		obtem_input:				;Obtem as entradas e faz debounce
+				push ax
+				push cx
+				push dx
+				mov		dx,319h
+				debounce1:
+				in		al,dx
+				and		al,01111111b
+				mov		ah,al
+				in		al,dx
+				and		al,01111111b
+				cmp		al,ah
+				jne		debounce1                    ;Fica em loop até o valor de duas entradas seguidas serem iguais
+				mov		cx,40
+				debounce2:
+				in		al,dx
+				and		al,01111111b
+				cmp		al,ah
+				jne		debounce1
+				loop	debounce2                   ;Verifica se sao iguais
+				mov		byte[entrada_atual],al
+				pop dx
+				pop cx
+				pop ax
+				ret
+
+		conta_giros:
+			push ax
+			push bx
+			mov  	ax,[parado]
+			cmp   ax,0
+			je		fim_contagiros			;Sai da funcao se o elevador esta parado
+			call	obtem_input
+			mov		bl,[entrada_atual]		;coloca em bl o valor da entrada atual
+			and		bl,01000000b
+			cmp		bl,0									;Verifica se o elevador esta num buraco
+			jne		fim_contagiros
+		buraco:
+			call	obtem_input
+			mov		bl,byte[entrada_atual]
+			and		bl,01000000b
+			cmp		bl,00000000b
+			je		buraco
+			cmp		byte[subindo],1
+			jne		desce
+			inc		word[contador_giros]     			;Se o elevador estiver subindo incrementa o contador de giros
+			jmp		fim_contagiros
+		desce:
+			dec		word[contador_giros]	  			;Se o elevador estiver descendo decrementa o contador de giros
+		fim_contagiros:
+			pop bx
+			pop ax
+			ret
 
 ;-----------------------------------KEYINT----------------------------------------------------
 keyint:
@@ -910,8 +988,11 @@ chamada_interna2	db		'0'
 chamada_interna3	db		'0'
 chamada_interna4	db		'0'
 parado						db		'0'
-bot_emergencia				db		'0'
-bot_g							db				'0'
+subindo						db		'0'
+bot_emergencia		db		'0'
+bot_g							db		'0'
+contador_giros		db		'0'
+entrada_atual			db		'0'
 
 ;*************************************************************************
 segment stack stack

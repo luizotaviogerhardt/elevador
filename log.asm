@@ -484,7 +484,7 @@ segment code
 			cmp byte[chamada_interna1],1
 			jne verifica2
 			cmp	byte[cor1],vermelho
-			je	verifica2:
+			je	verifica2
 			mov ax,1
 			mov bx,vermelho
 			mov	byte[cor1],vermelho
@@ -493,7 +493,7 @@ segment code
 			cmp byte[chamada_interna2],1
 			jne verifica3
 			cmp	byte[cor2],vermelho
-			je	verifica3:
+			je	verifica3
 			mov ax,2
 			mov bx,vermelho
 			call muda_cor_seta
@@ -502,7 +502,7 @@ segment code
 			cmp byte[chamada_interna3],1
 			jne verifica4
 			cmp	byte[cor3],vermelho
-			je	verifica4:
+			je	verifica4
 			mov ax,3
 			mov bx,vermelho
 			call muda_cor_seta
@@ -511,7 +511,7 @@ segment code
 			cmp byte[chamada_interna4],1
 			jne fimverint
 			cmp	byte[cor4],vermelho
-			je	fimverint:
+			je	fimverint
 			mov ax,4
 			mov bx,vermelho
 			call muda_cor_seta
@@ -532,7 +532,7 @@ segment code
 				cmp 	al,00000001b      			; verifica se o botão B1 foi apertado
 				jne 	verifica6					; caso contrario, vai para B2 direto
 				cmp	byte[cor5],vermelho
-				je	verifica6:
+				je	verifica6
 				mov 	byte[b1],1					; seta B1
 				mov ax,5
 				mov bx,vermelho
@@ -548,7 +548,7 @@ segment code
 				cmp 	al,00001000b    			; verifica se o botão B2 foi apertado
 				jne 	verifica7					; caso contrario, vai para B3
 				cmp	byte[cor6],azul
-				je	verifica7:
+				je	verifica7
 				mov 	byte[b2],1
 				mov ax,7
 				mov bx,azul
@@ -563,7 +563,7 @@ segment code
 				cmp 	al,00000010b     			; verifica se o botão B3 foi apertado
 				jne 	verifica8
 				cmp	byte[cor7],vermelho
-				je	verifica8:
+				je	verifica8
 				mov 	byte[b3],1
 				mov ax,6
 				mov bx,vermelho
@@ -578,7 +578,7 @@ segment code
 				cmp 	al,00010000b     			; verifica se o botão B4 foi apertado
 				jne 	verifica9
 				cmp	byte[cor8],azul
-				je	verifica9:
+				je	verifica9
 				mov 	byte[b4],1
 				mov ax,9
 				mov bx,azul
@@ -593,7 +593,7 @@ segment code
 				cmp 	al,00000100b      			; verifica se o botão B5 foi apertado
 				jne 	verifica10
 				cmp	byte[cor9],vermelho
-				je	verifica10:
+				je	verifica10
 				mov 	byte[b5],1
 				mov ax,8
 				mov bx,vermelho
@@ -608,7 +608,7 @@ segment code
 				cmp 	al,00100000b    			; verifica se o botão B6 foi apertado
 				jne 	fimverext
 				cmp	byte[cor10],azul
-				je	fimverext:
+				je	fimverext
 				mov 	byte[b6],1
 				mov ax,10
 				mov bx,azul
@@ -666,7 +666,7 @@ segment code
 				mov	 	ax,10
 				mov	 	bx,branco_intenso
 				call 	muda_cor_seta
-				mov	 	ax,1
+				mov	 	ax,4
 				mov	 	bx,branco_intenso
 				call 	muda_cor_seta
 				mov	byte[cor10],branco_intenso
@@ -677,14 +677,73 @@ segment code
 				parado2:
 					
 				parado1:
+				;Verifica chamadas abaixo do 4 andar
 				label4:
-					
+				mov		al,byte[entrada_atual]
+				cmp		byte[chamada_interna1],1
+				jne		label5
+				jmp		atende_abaixo4
+				label5:
+				cmp		byte[chamada_interna2],1
+				jne		label6
+				jmp		atende_abaixo4
+				label6:
+				cmp		byte[chamada_interna3],1
+				jne		label7
+				jmp		atende_abaixo4
+				label7:
+				and		al,00011111b
+				cmp		al,0
+				jne		atende_abaixo4
+				jmp		fim_move_elevador
+				atende_abaixo4:
+				mov		byte[estado],2	;Descendo
+				mov		dx,318h
+				mov		al,byte[saida318]
+				and		al,10111111b
+				or		al,10000000b
+				out		dx,al
+				mov		byte[saida318],al
+				jmp		fim_move_elevador
 				;Elevador subindo
 				subindo:
 				
 				;Elevador descendo
 				descendo:
+				mov 	al,byte[andar]
+				cmp 	al,3
+				jne 	label_d2
+				jmp 	descendo3
+				label_d2:
+				cmp 	al,2
+				jne 	label_d3
+				jmp 	descendo2
+				label_d3:		
+				jmp 	descendo1
+				descendo3:
+				jmp	fim_move_elevador
 				
+				descendo2:
+				cmp 	byte[chamada_interna2],1
+				je 		porta2
+				cmp 	byte[b2],1
+				je		porta2
+				jmp		fim_move_elevador
+				porta2:
+				call 	abre_porta
+				mov	 	byte[chamada_interna2],0
+				mov	 	byte[b2],0
+				mov	 	ax,7
+				mov	 	bx,branco_intenso
+				call 	muda_cor_seta
+				mov	 	ax,2
+				mov	 	bx,branco_intenso
+				call 	muda_cor_seta
+				mov	byte[cor6],branco_intenso
+				and		byte[saida318],11110111b
+				jmp	 fim_move_elevador
+				
+				descendo1:
 				
 				fim_move_elevador:
 				pop dx
@@ -707,6 +766,11 @@ atualiza_leds:
 
 abre_porta:
 			mov 	word[delay_porta],0
+			mov		dx,318h
+			mov		al,byte[saida318]
+			and		al,00111111b
+			out		dx,al
+			mov		byte[saida318],al
 			mov		dx,319h
 			mov		al,00000000b
 			out		dx,al						; acende o led que indica a porta aberta						

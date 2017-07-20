@@ -102,19 +102,19 @@ segment code
 			call tela_elevador	;Desenha interface do elevador
 
 			main:
-			cmp byte[bot_fim],1
+			cmp byte[bot_fim],1	;Compara se Q foi apertado
 			jne pulafim
 			jmp fimprograma
 			pulafim:
-			cmp byte[bot_emergencia],1
+			cmp byte[bot_emergencia],1 ;Compara se ESQ foi apertado
 			jne pulaeme
 			call emergencia
 			pulaeme:
-			call verifica_interna
-			call verifica_externa
-			call andar_atual
-			call move_elevador
-			call atualiza_leds
+			call verifica_interna	;Verifica as chamadas internas
+			call verifica_externa	;Verifica as chamadas externas
+			call andar_atual		;Atualiza o andar atual
+			call move_elevador		;Move o elevador dependendo das chamadas
+			call atualiza_leds		;Atualiza o estado dos leds
 			jmp main
 
 			fimprograma:
@@ -357,15 +357,17 @@ segment code
 		emergencia:
 		call	modo_emergencia
 		call	estado_parado
-		mov		ax,0
-		mov		[parado],ax
+		mov		al,byte[saida318]
+		and		al,00111111b
+		mov		dx,318h
+		out		dx,al
 		loopemergencia:
 		cmp 	byte[bot_emergencia],0
 		jne 	loopemergencia
 		call 	modo_funcionando
-		;cmp	byte[status],0         
-		;je 	emergencia_parado			
-		;mov 	ax,word[contador]  		
+		mov		al,byte[saida318]
+		mov		dx,318h
+		out		dx,al
 		ret
 
 		calibra:
@@ -390,7 +392,7 @@ segment code
 				mov   	word[contador_giros],267          ;3x89 = 267, que indica o quarto andar
 				mov		dx,318h
 				call conta_giros
-				mov   	byte[parado],0              ;Elevador no quarto andar
+				mov   	byte[estado],0              ;Elevador no quarto andar
 				mov     dx,318H
 				mov		al,00000000b							;Para o motor
 				out		dx,al
@@ -419,7 +421,12 @@ segment code
 				cmp		al,ah
 				jne		debounce1
 				loop	debounce2                   ;Verifica se sao iguais
-				mov		byte[entrada_atual],al
+				or		byte[entrada_atual],al
+				and		al,01000000b
+				cmp		al,0
+				jne		fim_obtem_input
+				and		byte[entrada_atual],10111111b
+				fim_obtem_input:
 				pop dx
 				pop cx
 				pop ax
@@ -533,7 +540,6 @@ segment code
 				jne 	verifica6					; caso contrario, vai para B2 direto
 				cmp	byte[cor5],vermelho
 				je	verifica6
-				mov 	byte[b1],1					; seta B1
 				mov ax,5
 				mov bx,vermelho
 				call muda_cor_seta
@@ -549,7 +555,6 @@ segment code
 				jne 	verifica7					; caso contrario, vai para B3
 				cmp	byte[cor6],azul
 				je	verifica7
-				mov 	byte[b2],1
 				mov ax,7
 				mov bx,azul
 				call muda_cor_seta
@@ -564,7 +569,6 @@ segment code
 				jne 	verifica8
 				cmp	byte[cor7],vermelho
 				je	verifica8
-				mov 	byte[b3],1
 				mov ax,6
 				mov bx,vermelho
 				call muda_cor_seta
@@ -579,7 +583,6 @@ segment code
 				jne 	verifica9
 				cmp	byte[cor8],azul
 				je	verifica9
-				mov 	byte[b4],1
 				mov ax,9
 				mov bx,azul
 				call muda_cor_seta
@@ -594,7 +597,6 @@ segment code
 				jne 	verifica10
 				cmp	byte[cor9],vermelho
 				je	verifica10
-				mov 	byte[b5],1
 				mov ax,8
 				mov bx,vermelho
 				call muda_cor_seta
@@ -609,7 +611,6 @@ segment code
 				jne 	fimverext
 				cmp	byte[cor10],azul
 				je	fimverext
-				mov 	byte[b6],1
 				mov ax,10
 				mov bx,azul
 				call muda_cor_seta
@@ -623,134 +624,497 @@ segment code
 				pop ax
 				ret
 				
-				
-			move_elevador:
-				push 	ax
-				push 	bx
-				push 	cx
-				push	dx
-				xor		ax,ax
-				mov 	al,byte[estado]
-				cmp 	al,0
-				je 		parado
-				cmp		al,1
-				jne 	label1
-				jmp		subindo
-				label1:	
-				jmp		descendo
-				;Elevador parado
-				parado:
-				mov 	al,byte[andar]
-				cmp 	al,4
-				je 		parado4
-				cmp 	al,3
-				jne 	label2
-				jmp 	parado3
-				label2:
-				cmp 	al,2
-				jne 	label3
-				jmp 	parado2
-				label3:		
-				jmp 	parado1
-				;Elevador parado o 4 andar
-				parado4:
-				cmp 	byte[chamada_interna4],1
-				je 		porta4
-				cmp 	byte[b6],1
-				je		porta4
-				jmp		label4
-				porta4:
-				call 	abre_porta
-				mov	 	byte[chamada_interna4],0
-				mov	 	byte[b6],0
-				mov	 	ax,10
-				mov	 	bx,branco_intenso
-				call 	muda_cor_seta
-				mov	 	ax,4
-				mov	 	bx,branco_intenso
-				call 	muda_cor_seta
-				mov	byte[cor10],branco_intenso
-				and		byte[saida318],11011111b
-				jmp	 fim_move_elevador
-				parado3:
+;----------------FUNCAO QUE REALIZA A LOGICA DO ELEVADOR -------------------------		
+		
+		move_elevador:
+			push 	ax
+			push 	bx
+			push 	cx
+			push	dx
+			xor		ax,ax
+			mov 	al,byte[estado] ;Parado = 0, Subindo = 1, Descendo = 2
+			cmp 	al,0
+			je 		parado
+			cmp		al,1
+			jne 	label1
+			jmp		subindo
+		label1:	
+			jmp		descendo
+		;Elevador parado
+		parado:
+			mov		dl,byte[estado]
+			cmp		dl,byte[estado_anterior]
+			je		pula_estado3
+			call	estado_parado
+			mov		byte[estado_anterior],dl
+			pula_estado3:
+			mov 	al,byte[andar]
+			cmp 	al,4
+			je 		parado4
+			cmp 	al,3
+			jne 	label2
+			jmp 	parado3
+		label2:
+			cmp 	al,2
+			jne 	label3
+			jmp 	parado2
+		label3:		
+			jmp 	parado1
+		;Elevador parado no 4 andar
+		parado4:
+			cmp 	byte[chamada_interna4],1
+			je 		porta4
+			mov		al,byte[entrada_atual]
+			and		al,00100000b
+			cmp		al,0
+			jne		porta4
+			jmp		compara_dif_4
+		porta4:
+			call 	abre_porta
+			mov	 	byte[chamada_interna4],0
+			and	 	byte[entrada_atual],11011111b
+			mov	 	ax,10
+			mov	 	bx,branco_intenso
+			call 	muda_cor_seta
+			mov	 	ax,4
+			mov	 	bx,branco_intenso
+			call 	muda_cor_seta
+			mov		byte[cor10],branco_intenso
+			mov		byte[cor4],branco_intenso
+			and		byte[saida318],11011111b
+			mov		al,byte[andar]
+			mov		byte[andar_antigo],al
+			jmp	 	fim_move_elevador
+		compara_dif_4:
+			cmp		byte[chamada_interna1],1
+			jne		label5
+			jmp		atende_abaixo4
+			label5:
+			cmp		byte[chamada_interna2],1
+			jne		label6
+			jmp		atende_abaixo4
+			label6:
+			cmp		byte[chamada_interna3],1
+			jne		label7
+			jmp		atende_abaixo4
+			label7:
+			mov		al,byte[entrada_atual]
+			and		al,00011111b
+			cmp		al,0
+			je		labele19
+			jmp		atende_abaixo4
+			labele19:
+			jmp		fim_move_elevador
+		atende_abaixo4:
+			jmp		desce_elevador
+		;Elevador parado no 3 andar
+		parado3:
+			cmp		byte[chamada_interna3],1
+			je		porta3
+			mov		al,byte[entrada_atual]
+			and		al,00010100b
+			cmp		al,0
+			jne		porta3
+			jmp		compara_dif_3
+		porta3:
+			call 	abre_porta
+			mov	 	byte[chamada_interna3],0
+			cmp		byte[estado],1
+			je		apaga_b5
+			cmp		byte[estado],2
+			je		apaga_b4
+			jmp		apaga_b4b5
+			apaga_b5:
+			and	 	byte[entrada_atual],11111011b
+			mov	 	ax,8
+			mov	 	bx,branco_intenso
+			call 	muda_cor_seta
+			mov		byte[cor9],branco_intenso
+			and		byte[saida318],11111011b
+			jmp		fim_porta3
+			apaga_b4:
+			and	 	byte[entrada_atual],11101111b
+			mov	 	ax,9
+			mov	 	bx,branco_intenso
+			call 	muda_cor_seta
+			mov		byte[cor8],branco_intenso
+			and		byte[saida318],11101111b
+			jmp		fim_porta3
+			apaga_b4b5:
+			and		byte[entrada_atual],11101011b
+			mov	 	ax,8
+			mov	 	bx,branco_intenso
+			call 	muda_cor_seta
+			mov	 	ax,9
+			mov	 	bx,branco_intenso
+			call 	muda_cor_seta
+			mov		byte[cor8],branco_intenso
+			mov		byte[cor9],branco_intenso
+			and		byte[saida318],11101011b
+			fim_porta3:
+			mov		byte[cor4],branco_intenso
+			mov	 	ax,3
+			mov	 	bx,branco_intenso
+			call 	muda_cor_seta
+			mov		al,byte[andar]
+			mov		byte[andar_antigo],al
+			jmp		 fim_move_elevador
+		compara_dif_3:
+			cmp		byte[chamada_interna1],1
+			jne		label8
+			jmp		atende_abaixo3
+			label8:
+			cmp		byte[chamada_interna2],1
+			jne		label9
+			jmp		atende_abaixo3
+			label9:
+			cmp		byte[chamada_interna4],1
+			jne		label10
+			jmp		atende_acima3
+			label10:
+			mov		al,byte[entrada_atual]
+			and		al,00100000b
+			cmp		al,0
+			je		labele8
+			jmp		atende_acima3
+			labele8:
+			mov		al,byte[entrada_atual]
+			and		al,00001011b
+			cmp		al,0
+			je		labele9
+			jmp		atende_abaixo3
+			labele9:
+			jmp		fim_move_elevador
+		atende_abaixo3:
+			jmp		desce_elevador
+		atende_acima3:
+			jmp		sobe_elevador
+		;Elevador parado no 2 andar
+		parado2:
+			cmp		byte[chamada_interna2],1
+			je		porta2
+			mov		al,byte[entrada_atual]
+			and		al,00001010b
+			cmp		al,0
+			jne		porta2
+			jmp		compara_dif_2
+		porta2:
+			call 	abre_porta
+			mov	 	byte[chamada_interna2],0
+			cmp		byte[estado],1
+			je		apaga_b3
+			cmp		byte[estado],2
+			je		apaga_b2
+			jmp		apaga_b2b3
+			apaga_b2:
+			and	 	byte[entrada_atual],11110111b
+			mov	 	ax,7
+			mov	 	bx,branco_intenso
+			call 	muda_cor_seta
+			mov		byte[cor6],branco_intenso
+			and		byte[saida318],11110111b
+			jmp		fim_porta2
+			apaga_b3:
+			and	 	byte[entrada_atual],11111101b
+			mov	 	ax,6
+			mov	 	bx,branco_intenso
+			call 	muda_cor_seta
+			mov		byte[cor7],branco_intenso
+			and		byte[saida318],11111101b
+			jmp		fim_porta2
+			apaga_b2b3:
+			and		byte[entrada_atual],11110101b
+			mov	 	ax,7
+			mov	 	bx,branco_intenso
+			call 	muda_cor_seta
+			mov	 	ax,6
+			mov	 	bx,branco_intenso
+			call 	muda_cor_seta
+			mov		byte[cor7],branco_intenso
+			mov		byte[cor6],branco_intenso
+			and		byte[saida318],11110101b
+			fim_porta2:
+			mov		byte[cor2],branco_intenso
+			mov	 	ax,2
+			mov	 	bx,branco_intenso
+			call 	muda_cor_seta
+			mov		al,byte[andar]
+			mov		byte[andar_antigo],al
+			jmp		 fim_move_elevador
+		compara_dif_2:
+			cmp		byte[chamada_interna1],1
+			jne		label11
+			jmp		atende_abaixo2
+			label11:
+			cmp		byte[chamada_interna3],1
+			jne		label12
+			jmp		atende_acima2
+			label12:
+			cmp		byte[chamada_interna4],1
+			jne		label13
+			jmp		atende_acima2
+			label13:
+			mov		al,byte[entrada_atual]
+			and		al,00110100b
+			cmp		al,0
+			je		labele21
+			jmp		atende_acima2
+			labele21:
+			mov		al,byte[entrada_atual]
+			and		al,00000001b
+			cmp		al,0
+			je		labele23
+			jmp		atende_abaixo2
+			labele23:
+			jmp		fim_move_elevador
+		atende_abaixo2:
+			jmp		desce_elevador
+		atende_acima2:
+			jmp		sobe_elevador
+		;Elevador parado no 1 andar
+		parado1:
+			cmp		byte[chamada_interna1],1
+			je		porta1
+			mov		al,byte[entrada_atual]
+			and		al,00000001b
+			cmp		al,0
+			jne		porta1
+			jmp		compara_dif_1
+		porta1:
+			call 	abre_porta
+			mov	 	byte[chamada_interna1],0
+			and	 	byte[entrada_atual],11111110b
+			mov	 	ax,5
+			mov	 	bx,branco_intenso
+			call 	muda_cor_seta
+			mov	 	ax,1
+			mov	 	bx,branco_intenso
+			call 	muda_cor_seta
+			mov		byte[cor5],branco_intenso
+			mov		byte[cor1],branco_intenso
+			and		byte[saida318],11111110b
+			mov		al,byte[andar]
+			mov		byte[andar_antigo],al
+			jmp	 fim_move_elevador
+		compara_dif_1:
+			cmp		byte[chamada_interna2],1
+			jne		label14
+			jmp		atende_acima1
+			label14:
+			cmp		byte[chamada_interna3],1
+			jne		label15
+			jmp		atende_acima1
+			label15:
+			cmp		byte[chamada_interna4],1
+			jne		label16
+			jmp		atende_acima1
+			label16:
+			mov		al,byte[entrada_atual]
+			and		al,00111110b
+			cmp		al,0
+			je		labele27
+			jmp		atende_acima1
+			labele27:
+			jmp		fim_move_elevador
+		atende_acima1:
+			jmp		sobe_elevador
+		;Elevador descendo
+		descendo:
+			mov		dl,byte[estado]
+			cmp		dl,byte[estado_anterior]
+			je		pula_estado2
+			call	estado_descendo
+			mov		byte[estado_anterior],dl
+			pula_estado2:
+			call	estado_descendo
+			mov 	al,byte[andar]
+			cmp 	al,3
+			jne 	label_d2
+			jmp 	descendo3
+			label_d2:
+			cmp 	al,2
+			jne 	label_d3
+			jmp 	descendo2
+			label_d3:		
+			cmp		al,1
+			jne		label_d1
+			jmp 	descendo1
+			label_d1:
+			jmp		fim_move_elevador
+		;Elevador descendo no 3 andar
+		descendo3:
+			mov		dl,byte[andar]
+			cmp		dl,byte[andar_antigo]
+			je		label18
+			cmp		byte[chamada_interna3],1
+			jne		label17
+			jmp		porta3
+			label17:
+			mov		al,byte[entrada_atual]
+			and		al,00010000b
+			cmp		al,0
+			je		label18
+			jmp		porta3
+			label18:
+			cmp		byte[chamada_interna2],1
+			jne		label19
+			jmp		atende_abaixo3
+			label19:
+			cmp		byte[chamada_interna1],1
+			jne		label20
+			jmp		atende_abaixo3
+			label20:
+			mov		al,byte[entrada_atual]
+			and		al,00001011b
+			cmp		al,0
+			je		label21
+			jmp		atende_abaixo3
+			label21:
+			mov		byte[estado],0
+			jmp	fim_move_elevador
+		;Elevador descendo no 2 andar
+		descendo2:
+			mov		dl,byte[andar]
+			cmp		dl,byte[andar_antigo]
+			je		label23
+			cmp		byte[chamada_interna2],1
+			jne		label22
+			jmp		porta2
+			label22:
+			mov		al,byte[entrada_atual]
+			and		al,00001000b
+			cmp		al,0
+			je		label23
+			jmp		porta2
+			label23:
+			cmp		byte[chamada_interna1],1
+			jne		label24
+			jmp		atende_abaixo2
+			label24:
+			mov		al,byte[entrada_atual]
+			and		al,00000001b
+			cmp		al,0
+			je		label25
+			jmp		atende_abaixo2
+			label25:
+			mov		byte[estado],0
+			jmp	fim_move_elevador
+		
+		;Elevador descendo no 1 andar
+		descendo1:
+			mov		byte[estado],0
+			jmp		porta1
 					
-				parado2:
+		desce_elevador:
+			mov		byte[estado],2	;Descendo
+			mov		dx,318h
+			mov		al,byte[saida318]
+			and		al,10111111b
+			or		al,10000000b
+			out		dx,al
+			mov		byte[saida318],al
+			jmp		fim_move_elevador
+			
+		;Elevador subindo
+		subindo:
+			mov		dl,byte[estado]
+			cmp		dl,byte[estado_anterior]
+			je		pula_estado1
+			call	estado_subindo
+			mov		byte[estado_anterior],dl
+			pula_estado1:
+			mov 	al,byte[andar]
+			cmp 	al,3
+			jne 	label_s2
+			jmp 	subindo3
+			label_s2:
+			cmp 	al,2
+			jne 	label_s3
+			jmp 	subindo2
+			label_s3:
+			cmp		al,4
+			jne		label_s4
+			jmp 	subindo4
+			label_s4:
+			jmp		fim_move_elevador
+		;Elevador subindo no 3 andar
+		subindo3:
+			mov		dl,byte[andar]
+			cmp		dl,byte[andar_antigo]
+			je		label27
+			cmp		byte[chamada_interna3],1
+			jne		label26
+			jmp		porta3
+			label26:
+			mov		al,byte[entrada_atual]
+			and		al,00000100b
+			cmp		al,0
+			je		label27
+			jmp		porta3
+			label27:
+			cmp		byte[chamada_interna4],1
+			jne		label28
+			jmp		atende_acima3
+			label28:
+			mov		al,byte[entrada_atual]
+			and		al,00100000b
+			cmp		al,0
+			je		label29
+			jmp		atende_acima3
+			label29:
+			mov		byte[estado],0
+			jmp	fim_move_elevador
+		;Elevador subindo no 2 andar
+		subindo2:
+			mov		dl,byte[andar]
+			cmp		dl,byte[andar_antigo]
+			je		label31
+			cmp		byte[chamada_interna2],1
+			jne		label30
+			jmp		porta2
+			label30:
+			mov		al,byte[entrada_atual]
+			and		al,00000010b
+			cmp		al,0
+			je		label31
+			jmp		porta2
+			label31:
+			cmp		byte[chamada_interna3],1
+			jne		label32
+			jmp		atende_acima2
+			label32:
+			cmp		byte[chamada_interna4],1
+			jne		label33
+			jmp		atende_acima2
+			label33:
+			mov		al,byte[entrada_atual]
+			and		al,00110100b
+			cmp		al,0
+			je		label34
+			jmp		atende_acima2
+			label34:
+			mov		byte[estado],0
+			jmp	fim_move_elevador
+		subindo4:
+			mov		byte[estado],0
+			jmp		porta4
 					
-				parado1:
-				;Verifica chamadas abaixo do 4 andar
-				label4:
-				mov		al,byte[entrada_atual]
-				cmp		byte[chamada_interna1],1
-				jne		label5
-				jmp		atende_abaixo4
-				label5:
-				cmp		byte[chamada_interna2],1
-				jne		label6
-				jmp		atende_abaixo4
-				label6:
-				cmp		byte[chamada_interna3],1
-				jne		label7
-				jmp		atende_abaixo4
-				label7:
-				and		al,00011111b
-				cmp		al,0
-				jne		atende_abaixo4
-				jmp		fim_move_elevador
-				atende_abaixo4:
-				mov		byte[estado],2	;Descendo
-				mov		dx,318h
-				mov		al,byte[saida318]
-				and		al,10111111b
-				or		al,10000000b
-				out		dx,al
-				mov		byte[saida318],al
-				jmp		fim_move_elevador
-				;Elevador subindo
-				subindo:
-				
-				;Elevador descendo
-				descendo:
-				mov 	al,byte[andar]
-				cmp 	al,3
-				jne 	label_d2
-				jmp 	descendo3
-				label_d2:
-				cmp 	al,2
-				jne 	label_d3
-				jmp 	descendo2
-				label_d3:		
-				jmp 	descendo1
-				descendo3:
-				jmp	fim_move_elevador
-				
-				descendo2:
-				cmp 	byte[chamada_interna2],1
-				je 		porta2
-				cmp 	byte[b2],1
-				je		porta2
-				jmp		fim_move_elevador
-				porta2:
-				call 	abre_porta
-				mov	 	byte[chamada_interna2],0
-				mov	 	byte[b2],0
-				mov	 	ax,7
-				mov	 	bx,branco_intenso
-				call 	muda_cor_seta
-				mov	 	ax,2
-				mov	 	bx,branco_intenso
-				call 	muda_cor_seta
-				mov	byte[cor6],branco_intenso
-				and		byte[saida318],11110111b
-				jmp	 fim_move_elevador
-				
-				descendo1:
-				
-				fim_move_elevador:
-				pop dx
-				pop cx
-				pop bx
-				pop ax
-				ret
+		sobe_elevador:
+			mov		byte[estado],1	;Subindo
+			mov		dx,318h
+			mov		al,byte[saida318]
+			and		al,01111111b
+			or		al,01000000b
+			out		dx,al
+			mov		byte[saida318],al
+			jmp		fim_move_elevador
+					
+		fim_move_elevador:
+			pop dx
+			pop cx
+			pop bx
+			pop ax
+			ret
 				
 				
 atualiza_leds:
@@ -1343,12 +1707,14 @@ mens_externas		db		'EXTERNAS$'
 var_seta				dw		0
 buffer					db		'                   $'
 estado					db		0							;0 = Parado 1 = Subindo 2 = Descendo
+estado_anterior			db		0
 estado1					db		'Parado$'
 estado2					db		'Subindo$'
 estado3					db		'Descendo$'
 modo1						db		'Funcionando$'
 modo2						db		'EMERGENCIA!!!$'
 andar						db		0
+andar_antigo				db		4
 um							db		'1'
 dois						db		'2'
 tres						db		'3'

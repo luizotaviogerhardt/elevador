@@ -96,10 +96,11 @@ segment code
 			mov     al,12h
 			mov     ah,0
 			int     10h
-			
+
 			call tela_inicial	;Desenha interface inicial
 			call calibra		;Calibra o elevador
 			call tela_elevador	;Desenha interface do elevador
+
 
 			main:
 			cmp byte[bot_fim],1	;Compara se Q foi apertado
@@ -181,49 +182,103 @@ segment code
 		drawWord		mens_externas,28,67,branco_intenso
 		;Setinhas Chamada internas
 		;Para baixo
-		drawLine	440,450,440,370,branco_intenso
-		drawLine	450,420,440,370,branco_intenso
-		drawLine	430,420,440,370,branco_intenso
+		drawLine	435,420,445,420,branco_intenso
+		drawLine	435,420,435,400,branco_intenso
+		drawLine	445,420,445,400,branco_intenso
+		drawLine	435,400,430,400,branco_intenso
+		drawLine	445,400,450,400,branco_intenso
+		drawLine	430,400,440,380,branco_intenso
+		drawLine	450,400,440,380,branco_intenso
 		;Para cima e para baixo
-		drawLine	440,347,440,267,branco_intenso;seta dupla
-		drawLine	450,297,440,267,branco_intenso
-		drawLine	430,297,440,267,branco_intenso
-		drawLine	440,347,450,307,branco_intenso
-		drawLine	440,347,430,307,branco_intenso
+		drawLine	435,317,435,297,branco_intenso
+		drawLine	445,317,445,297,branco_intenso
+		drawLine	435,297,430,297,branco_intenso
+		drawLine	445,297,450,297,branco_intenso
+		drawLine	435,317,430,317,branco_intenso
+		drawLine	445,317,450,317,branco_intenso
+		drawLine	430,297,440,277,branco_intenso
+		drawLine	450,297,440,277,branco_intenso
+		drawLine	430,317,440,337,branco_intenso
+		drawLine	450,317,440,337,branco_intenso
+
+
 		;Para cima e para baixo
-		drawLine	440,244,440,164,branco_intenso;seta dupla
-		drawLine	450,194,440,164,branco_intenso
-		drawLine	430,194,440,164,branco_intenso
-		drawLine	440,244,450,204,branco_intenso
-		drawLine	440,244,430,204,branco_intenso
+		drawLine	435,214,435,194,branco_intenso
+		drawLine	445,214,445,194,branco_intenso
+		drawLine	435,194,430,194,branco_intenso
+		drawLine	445,194,450,194,branco_intenso
+		drawLine	435,214,430,214,branco_intenso
+		drawLine	445,214,450,214,branco_intenso
+		drawLine	430,194,440,174,branco_intenso
+		drawLine	450,194,440,174,branco_intenso
+		drawLine	430,214,440,234,branco_intenso
+		drawLine	450,214,440,234,branco_intenso
+
+
+
+
 		;Para cima
-		drawLine	440,140,440,60,branco_intenso
-		drawLine	440,140,450,90,branco_intenso
-		drawLine	440,140,430,90,branco_intenso
+		drawLine	435,80,445,80,branco_intenso
+		drawLine	435,100,435,80,branco_intenso
+		drawLine	445,100,445,80,branco_intenso
+		drawLine	435,100,430,100,branco_intenso
+		drawLine	445,100,450,100,branco_intenso
+		drawLine	430,100,440,120,branco_intenso
+		drawLine	450,100,440,120,branco_intenso
+
+
 		;Setinhas Chamada externas
 		;Para baixo
-		drawLine	570,450,570,370,branco_intenso
-		drawLine	580,420,570,370,branco_intenso
-		drawLine	560,420,570,370,branco_intenso
+		drawLine	565,420,575,420,branco_intenso
+		drawLine	565,420,565,400,branco_intenso
+		drawLine	575,420,575,400,branco_intenso
+		drawLine	565,400,560,400,branco_intenso
+		drawLine	575,400,580,400,branco_intenso
+		drawLine	560,400,570,380,branco_intenso
+		drawLine	580,400,570,380,branco_intenso
 		;Para cima e para baixo
-		drawLine	550,347,550,267,branco_intenso;baixo
-		drawLine	560,317,550,267,branco_intenso
-		drawLine	540,317,550,267,branco_intenso
-		drawLine	590,347,590,267,branco_intenso;cima
-		drawLine	590,347,600,297,branco_intenso
-		drawLine	590,347,580,297,branco_intenso
+		drawLine	545,327,555,327,branco_intenso
+		drawLine	545,327,545,307,branco_intenso
+		drawLine	555,327,555,307,branco_intenso
+		drawLine	545,307,540,307,branco_intenso
+		drawLine	555,307,560,307,branco_intenso
+		drawLine	540,307,550,287,branco_intenso
+		drawLine	560,307,550,287,branco_intenso
+
+		drawLine	585,287,595,287,branco_intenso
+		drawLine	585,307,585,287,branco_intenso
+		drawLine	595,307,595,287,branco_intenso
+		drawLine	585,307,580,307,branco_intenso
+		drawLine	595,307,600,307,branco_intenso
+		drawLine	580,307,590,327,branco_intenso
+		drawLine	600,307,590,327,branco_intenso
+
 		;Para cima e para baixo
-		drawLine	550,244,550,164,branco_intenso;baixo
-		drawLine	560,214,550,164,branco_intenso
-		drawLine	540,214,550,164,branco_intenso
-		drawLine	590,244,590,164,branco_intenso;cima
-		drawLine	590,244,600,194,branco_intenso
-		drawLine	590,244,580,194,branco_intenso
+		drawLine	545,224,555,224,branco_intenso
+		drawLine	545,224,545,204,branco_intenso
+		drawLine	555,224,555,204,branco_intenso
+		drawLine	545,204,540,204,branco_intenso
+		drawLine	555,204,560,204,branco_intenso
+		drawLine	540,204,550,184,branco_intenso
+		drawLine	560,204,550,184,branco_intenso
+
+		drawLine	585,184,595,184,branco_intenso
+		drawLine	585,204,585,184,branco_intenso
+		drawLine	595,204,595,184,branco_intenso
+		drawLine	585,204,580,204,branco_intenso
+		drawLine	595,204,600,204,branco_intenso
+		drawLine	580,204,590,224,branco_intenso
+		drawLine	600,204,590,224,branco_intenso
+
 		;Para cima
-    drawLine	570,140,570,60,branco_intenso
-		drawLine	570,140,580,90,branco_intenso
-		drawLine	570,140,560,90,branco_intenso
-		;
+		drawLine	565,80,575,80,branco_intenso
+		drawLine	565,100,565,80,branco_intenso
+		drawLine	575,100,575,80,branco_intenso
+		drawLine	565,100,560,100,branco_intenso
+		drawLine	575,100,580,100,branco_intenso
+		drawLine	560,100,570,120,branco_intenso
+		drawLine	580,100,570,120,branco_intenso
+
 
 		drawChar	quatro,3,15,branco_intenso
 		call estado_parado
@@ -269,86 +324,148 @@ segment code
 		mov word[var_seta],ax
 		mov byte[cor],bl
 		cmp ax,4
-		jne seta2
-		drawLine	440,450,440,370,bl
-		drawLine	450,420,440,370,bl
-		drawLine	430,420,440,370,bl
+		je	seta1
+		jmp seta2
+		seta1:
+		drawLine	435,420,445,420,bl
+		drawLine	435,420,435,400,bl
+		drawLine	445,420,445,400,bl
+		drawLine	435,400,430,400,bl
+		drawLine	445,400,450,400,bl
+		drawLine	430,400,440,380,bl
+		drawLine	450,400,440,380,bl
 		seta2:
 		mov ax,word[var_seta]
 		mov bl,byte[cor]
 		cmp ax,3
-		jne seta3
-		drawLine	440,347,440,267,bl
-		drawLine	450,297,440,267,bl
-		drawLine	430,297,440,267,bl
-		drawLine	440,347,450,307,bl
-		drawLine	440,347,430,307,bl
+		je	seta2ok
+		jmp seta3
+		seta2ok:
+		drawLine	435,317,435,297,bl
+		drawLine	445,317,445,297,bl
+		drawLine	435,297,430,297,bl
+		drawLine	445,297,450,297,bl
+		drawLine	435,317,430,317,bl
+		drawLine	445,317,450,317,bl
+		drawLine	430,297,440,277,bl
+		drawLine	450,297,440,277,bl
+		drawLine	430,317,440,337,bl
+		drawLine	450,317,440,337,bl
 		seta3:
 		mov ax,word[var_seta]
 		mov bl,byte[cor]
 		cmp ax,2
-		jne seta4
-		drawLine	440,244,440,164,bl
-		drawLine	450,194,440,164,bl
-		drawLine	430,194,440,164,bl
-		drawLine	440,244,450,204,bl
-		drawLine	440,244,430,204,bl
+		je	seta3ok
+		jmp seta4
+		seta3ok:
+		drawLine	435,214,435,194,bl
+		drawLine	445,214,445,194,bl
+		drawLine	435,194,430,194,bl
+		drawLine	445,194,450,194,bl
+		drawLine	435,214,430,214,bl
+		drawLine	445,214,450,214,bl
+		drawLine	430,194,440,174,bl
+		drawLine	450,194,440,174,bl
+		drawLine	430,214,440,234,bl
+		drawLine	450,214,440,234,bl
 		seta4:
 		mov ax,word[var_seta]
 		mov bl,byte[cor]
 		cmp ax,1
-		jne seta5
-		drawLine	440,140,440,60,bl
-		drawLine	440,140,450,90,bl
-		drawLine	440,140,430,90,bl
+		je	seta4ok
+		jmp seta5
+		seta4ok:
+		drawLine	435,80,445,80,bl
+		drawLine	435,100,435,80,bl
+		drawLine	445,100,445,80,bl
+		drawLine	435,100,430,100,bl
+		drawLine	445,100,450,100,bl
+		drawLine	430,100,440,120,bl
+		drawLine	450,100,440,120,bl
 		seta5:
 		mov ax,word[var_seta]
 		mov bl,byte[cor]
 		cmp ax,10
-		jne seta6
-		drawLine	570,450,570,370,bl
-		drawLine	580,420,570,370,bl
-		drawLine	560,420,570,370,bl
+		je	seta5ok
+		jmp seta6
+		seta5ok:
+		drawLine	565,420,575,420,bl
+		drawLine	565,420,565,400,bl
+		drawLine	575,420,575,400,bl
+		drawLine	565,400,560,400,bl
+		drawLine	575,400,580,400,bl
+		drawLine	560,400,570,380,bl
+		drawLine	580,400,570,380,bl
 		seta6:
 		mov ax,word[var_seta]
 		mov bl,byte[cor]
 		cmp ax,9
-		jne seta7
-		drawLine	550,347,550,267,bl
-		drawLine	560,317,550,267,bl
-		drawLine	540,317,550,267,bl
+		je	seta6ok
+		jmp seta7
+		seta6ok:
+		drawLine	545,327,555,327,bl
+		drawLine	545,327,545,307,bl
+		drawLine	555,327,555,307,bl
+		drawLine	545,307,540,307,bl
+		drawLine	555,307,560,307,bl
+		drawLine	540,307,550,287,bl
+		drawLine	560,307,550,287,bl
 		seta7:
 		mov ax,word[var_seta]
 		mov bl,byte[cor]
 		cmp ax,8
-		jne seta8
-		drawLine	590,347,590,267,bl
-		drawLine	590,347,600,297,bl
-		drawLine	590,347,580,297,bl
+		je	seta7ok
+		jmp seta8
+		seta7ok:
+		drawLine	585,287,595,287,bl
+		drawLine	585,307,585,287,bl
+		drawLine	595,307,595,287,bl
+		drawLine	585,307,580,307,bl
+		drawLine	595,307,600,307,bl
+		drawLine	580,307,590,327,bl
+		drawLine	600,307,590,327,bl
 		seta8:
 		mov ax,word[var_seta]
 		mov bl,byte[cor]
 		cmp ax,7
-		jne seta9
-		drawLine	550,244,550,164,bl
-		drawLine	560,214,550,164,bl
-		drawLine	540,214,550,164,bl
+		je	seta8ok
+		jmp seta9
+		seta8ok:
+		drawLine	545,224,555,224,bl
+		drawLine	545,224,545,204,bl
+		drawLine	555,224,555,204,bl
+		drawLine	545,204,540,204,bl
+		drawLine	555,204,560,204,bl
+		drawLine	540,204,550,184,bl
+		drawLine	560,204,550,184,bl
 		seta9:
 		mov ax,word[var_seta]
 		mov bl,byte[cor]
 		cmp ax,6
-		jne seta10
-		drawLine	590,244,590,164,bl
-		drawLine	590,244,600,194,bl
-		drawLine	590,244,580,194,bl
+		je	seta9ok
+		jmp seta10
+		seta9ok:
+		drawLine	585,184,595,184,bl
+		drawLine	585,204,585,184,bl
+		drawLine	595,204,595,184,bl
+		drawLine	585,204,580,204,bl
+		drawLine	595,204,600,204,bl
+		drawLine	580,204,590,224,bl
+		drawLine	600,204,590,224,bl
 		seta10:
 		mov ax,word[var_seta]
 		mov bl,byte[cor]
 		cmp ax,5
-		jne fim_mudacorseta
-		drawLine	570,140,570,60,bl
-		drawLine	570,140,580,90,bl
-		drawLine	570,140,560,90,bl
+		je	seta10ok
+		jmp fim_mudacorseta
+		seta10ok:
+		drawLine	565,80,575,80,bl
+		drawLine	565,100,565,80,bl
+		drawLine	575,100,575,80,bl
+		drawLine	565,100,560,100,bl
+		drawLine	575,100,580,100,bl
+		drawLine	560,100,570,120,bl
+		drawLine	580,100,570,120,bl
 		fim_mudacorseta:
 		pop bx
 		pop ax
@@ -459,16 +576,16 @@ segment code
 			pop bx
 			pop ax
 			ret
-			
+
 		andar_atual:
-		call    conta_giros     	
+		call    conta_giros
 		cmp		word[contador_giros],267 			;4 Andar
 		jne   	terceiro
 		mov   	byte[andar],4
 		drawChar	quatro,3,15,branco_intenso
 		terceiro:
 		cmp 	word[contador_giros],178			;3 Andar
-		jne 	segundo				
+		jne 	segundo
 		mov  	byte[andar],3
 		drawChar	tres,3,15,branco_intenso
 		segundo:
@@ -481,10 +598,10 @@ segment code
 		jne 	exit
 		mov  	byte[andar],1
 		drawChar	um,3,15,branco_intenso
-		exit:			
-		ret 
-			
-			
+		exit:
+		ret
+
+
 		verifica_interna:
 			push ax
 			push bx
@@ -527,7 +644,7 @@ segment code
 			pop bx
 			pop ax
 			ret
-			
+
 		verifica_externa:
 				push ax
 				push bx
@@ -535,7 +652,7 @@ segment code
 				call obtem_input
 				mov dx,318h
 				mov 	al, byte[entrada_atual]		;coloca em al a entrada atual
-				and 	al,00000001b				
+				and 	al,00000001b
 				cmp 	al,00000001b      			; verifica se o botão B1 foi apertado
 				jne 	verifica6					; caso contrario, vai para B2 direto
 				cmp	byte[cor5],vermelho
@@ -548,9 +665,9 @@ segment code
 				mov	al,byte[saida318]
 				out dx,al
 
-			verifica6:  
+			verifica6:
 				mov 	al, byte[entrada_atual]
-				and 	al,00001000b				
+				and 	al,00001000b
 				cmp 	al,00001000b    			; verifica se o botão B2 foi apertado
 				jne 	verifica7					; caso contrario, vai para B3
 				cmp	byte[cor6],azul
@@ -562,7 +679,7 @@ segment code
 				or	byte[saida318],00001000b
 				mov	al,byte[saida318]
 				out dx,al
-			verifica7:	
+			verifica7:
 				mov 	al, byte[entrada_atual]
 				and 	al,00000010b
 				cmp 	al,00000010b     			; verifica se o botão B3 foi apertado
@@ -589,8 +706,8 @@ segment code
 				mov	byte[cor8],azul
 				or	byte[saida318],00010000b
 				mov	al,byte[saida318]
-				out dx,al	
-			verifica9:	
+				out dx,al
+			verifica9:
 				mov 	al, byte[entrada_atual]
 				and 	al,00000100b
 				cmp 	al,00000100b      			; verifica se o botão B5 foi apertado
@@ -603,8 +720,8 @@ segment code
 				mov	byte[cor9],vermelho
 				or	byte[saida318],00000100b
 				mov	al,byte[saida318]
-				out dx,al		    
-			verifica10:	
+				out dx,al
+			verifica10:
 				mov 	al, byte[entrada_atual]
 				and 	al,00100000b
 				cmp 	al,00100000b    			; verifica se o botão B6 foi apertado
@@ -617,15 +734,15 @@ segment code
 				mov	byte[cor10],azul
 				or	byte[saida318],00100000b
 				mov	al,byte[saida318]
-				out dx,al	
+				out dx,al
 			fimverext:
 				pop dx
 				pop bx
 				pop ax
 				ret
-				
-;----------------FUNCAO QUE REALIZA A LOGICA DO ELEVADOR -------------------------		
-		
+
+;----------------FUNCAO QUE REALIZA A LOGICA DO ELEVADOR -------------------------
+
 		move_elevador:
 			push 	ax
 			push 	bx
@@ -638,7 +755,7 @@ segment code
 			cmp		al,1
 			jne 	label1
 			jmp		subindo
-		label1:	
+		label1:
 			jmp		descendo
 		;Elevador parado
 		parado:
@@ -658,7 +775,7 @@ segment code
 			cmp 	al,2
 			jne 	label3
 			jmp 	parado2
-		label3:		
+		label3:
 			jmp 	parado1
 		;Elevador parado no 4 andar
 		parado4:
@@ -935,7 +1052,7 @@ segment code
 			cmp 	al,2
 			jne 	label_d3
 			jmp 	descendo2
-			label_d3:		
+			label_d3:
 			cmp		al,1
 			jne		label_d1
 			jmp 	descendo1
@@ -999,12 +1116,12 @@ segment code
 			label25:
 			mov		byte[estado],0
 			jmp	fim_move_elevador
-		
+
 		;Elevador descendo no 1 andar
 		descendo1:
 			mov		byte[estado],0
 			jmp		porta1
-					
+
 		desce_elevador:
 			mov		byte[estado],2	;Descendo
 			mov		dx,318h
@@ -1014,7 +1131,7 @@ segment code
 			out		dx,al
 			mov		byte[saida318],al
 			jmp		fim_move_elevador
-			
+
 		;Elevador subindo
 		subindo:
 			mov		dl,byte[estado]
@@ -1098,7 +1215,7 @@ segment code
 		subindo4:
 			mov		byte[estado],0
 			jmp		porta4
-					
+
 		sobe_elevador:
 			mov		byte[estado],1	;Subindo
 			mov		dx,318h
@@ -1108,15 +1225,15 @@ segment code
 			out		dx,al
 			mov		byte[saida318],al
 			jmp		fim_move_elevador
-					
+
 		fim_move_elevador:
 			pop dx
 			pop cx
 			pop bx
 			pop ax
 			ret
-				
-				
+
+
 atualiza_leds:
 			push	ax
 			push	dx
@@ -1137,7 +1254,7 @@ abre_porta:
 			mov		byte[saida318],al
 			mov		dx,319h
 			mov		al,00000000b
-			out		dx,al						; acende o led que indica a porta aberta						
+			out		dx,al						; acende o led que indica a porta aberta
 porta_aberta:
 			inc 	word[delay_porta]
 			cmp 	word[delay_porta],0x3fff
@@ -1216,7 +1333,7 @@ keyint:
 		;mov ax,4
 		;mov bx,vermelho
 		;call muda_cor_seta
-		
+
 		pressionouq:
 		cmp		byte[tecla_u],10h
 		jne 	pressionouesc
